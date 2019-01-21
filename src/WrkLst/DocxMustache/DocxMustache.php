@@ -5,12 +5,12 @@ namespace WrkLst\DocxMustache;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-//Custom DOCX template class to change content based on mustache templating engine.
 class DocxMustache
 {
     public $items;
     public $word_doc;
-    public $template_file_name;
+    public $filename;
+    public $template_filename;
     public $template_file;
     public $local_path;
     public $storageDisk;
@@ -22,7 +22,8 @@ class DocxMustache
     public function __construct($items, $local_template_file)
     {
         $this->items = $items;
-        $this->template_file_name = basename($local_template_file);
+        $this->filename = basename($local_template_file);
+        $this->template_filename = $this->filename;
         $this->template_file = $local_template_file;
         $this->word_doc = false;
         $this->zipper = new \Chumper\Zipper\Zipper();
@@ -31,7 +32,7 @@ class DocxMustache
         $this->storageDisk = 'local';
 
         //prefix within your storage path
-        $this->storagePathPrefix = 'app/';
+        $this->storagePathPrefix = '';
 
         //if you use img urls that support manipulation via parameter
         $this->imageManipulation = ''; //'&w=1800';
@@ -41,8 +42,10 @@ class DocxMustache
 
     public function Execute($dpi = 72)
     {
-        $this->CopyTmplate();
+        $this->CopyTemplate();
         $this->ReadTeamplate($dpi);
+        
+        return $this;
     }
 
     /**
@@ -50,7 +53,7 @@ class DocxMustache
      */
     public function StoragePath($file)
     {
-        return storage_path($file);
+        return \Storage::disk($this->storageDisk)->path($file);
     }
 
     /**
@@ -77,6 +80,8 @@ class DocxMustache
                 $disk->deleteDirectory($dir);
             }
         }
+        
+        return $this;
     }
 
     public function GetTmpDir()
@@ -87,18 +92,23 @@ class DocxMustache
 
         return $path;
     }
+    
+    public function download()
+    {
+        return \Storage::download($this->local_path.$this->filename);
+    }
 
-    public function CopyTmplate()
+    public function CopyTemplate()
     {
         $this->Log('Get Copy of Template');
         $this->local_path = $this->GetTmpDir();
-        \Storage::disk($this->storageDisk)->copy($this->storagePathPrefix.$this->template_file, $this->local_path.$this->template_file_name);
+        \Storage::disk($this->storageDisk)->copy($this->storagePathPrefix.$this->template_file, $this->local_path.$this->template_filename);
     }
 
     protected function exctractOpenXmlFile($file)
     {
         $this->zipper
-            ->make($this->StoragePath($this->local_path.$this->template_file_name))
+            ->make($this->StoragePath($this->local_path.$this->template_filename))
             ->extractTo($this->StoragePath($this->local_path), [$file], \Chumper\Zipper\Zipper::WHITELIST);
     }
 
@@ -464,28 +474,24 @@ class DocxMustache
 
     public function SaveAsPdf()
     {
-        $this->Log('Converting DOCX to PDF');
-        //convert to pdf with libre office
+        $this->filename = pathinfo($this->StoragePath($this->local_path.$this->template_filename), PATHINFO_FILENAME) . '.pdf';
+        
         $process = new \Symfony\Component\Process\Process([
             'soffice',
             '--headless',
             '--convert-to',
             'pdf',
-            $this->StoragePath($this->local_path.$this->template_file_name),
+            $this->StoragePath($this->local_path.$this->template_filename),
             '--outdir',
             $this->StoragePath($this->local_path),
         ]);
-        $process->start();
-        while ($process->isRunning()) {
-            //wait until process is ready
-        }
-        // executes after the command finishes
+        
+        $process->run();
+
         if (!$process->isSuccessful()) {
             throw new \Symfony\Component\Process\Exception\ProcessFailedException($process);
-        } else {
-            $path_parts = pathinfo($this->StoragePath($this->local_path.$this->template_file_name));
-
-            return $this->StoragePath($this->local_path.$path_parts['filename'].'pdf');
         }
+        
+        return $this;
     }
 }
