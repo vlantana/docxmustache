@@ -3,12 +3,10 @@
     "description": "docx template manipulation class, based on mustache templating language",
     "keywords": ["laravel", "docx", "openxml", "template", "mustache", "php"],
     "require": {
-        "php" : ">=5.3.0",
-        "illuminate/support": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x|5.6.x|5.7.x|5.8.x",
-        "illuminate/filesystem": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x|5.6.x|5.7.x|5.8.x",
-        "chumper/zipper": "^1.0",
-        "mustache/mustache": "^2.11",
-        "intervention/image": "^2.3"
+        "php" : ">=7.1.0",
+        "mustache/mustache": "^2.12",
+        "intervention/image": "^2.5",
+        "wrklst/zipper": "^1.0"
     },
     "homepage" : "https://github.com/wrklst/docxmustache",
     "license": "MIT",

@@ -5,6 +5,7 @@ namespace WrkLst\DocxMustache;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
+//Custom DOCX template class to change content based on mustache templating engine.
 class DocxMustache
 {
     public $items;
@@ -26,7 +27,7 @@ class DocxMustache
         $this->template_filename = $this->filename;
         $this->template_file = $local_template_file;
         $this->word_doc = false;
-        $this->zipper = new \Chumper\Zipper\Zipper();
+        $this->zipper = new \Wrklst\Zipper\Zipper();
 
         //name of disk for storage
         $this->storageDisk = 'local';
@@ -109,7 +110,7 @@ class DocxMustache
     {
         $this->zipper
             ->make($this->StoragePath($this->local_path.$this->template_filename))
-            ->extractTo($this->StoragePath($this->local_path), [$file], \Chumper\Zipper\Zipper::WHITELIST);
+            ->extractTo($this->StoragePath($this->local_path), [$file], \Wrklst\Zipper\Zipper::WHITELIST);
     }
 
     protected function ReadOpenXmlFile($file, $type = 'file')
